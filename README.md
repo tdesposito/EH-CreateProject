@@ -1,7 +1,6 @@
-create-ehproject
-================
+# EH-CreateProject
 
-Create a project from an EH template
+A tool to create a new project from a [template](https://github.com/tdesposito/Website-Template).
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/create-ehproject.svg)](https://npmjs.org/package/create-ehproject)
@@ -10,23 +9,27 @@ Create a project from an EH template
 
 <!-- toc -->
 * [Usage](#usage)
-* [Commands](#commands)
+* [Options](#options)
 <!-- tocstop -->
 # Usage
 <!-- usage -->
 ```sh-session
 $ npm install -g create-ehproject
-$ create-ehproject COMMAND
+$ create-ehproject [DIR] [OPTIONS]
 running command...
-$ create-ehproject (-v|--version|version)
-create-ehproject/0.0.0 win32-x64 node-v12.13.1
-$ create-ehproject --help [COMMAND]
+$ create-ehproject --help
 USAGE
   $ create-ehproject COMMAND
 ...
 ```
 <!-- usagestop -->
-# Commands
-<!-- commands -->
-
-<!-- commandsstop -->
+# Options
+<!-- options -->
+-d, --description=description   Site Description (for SEO)
+ -h, --help                      show CLI help
+ -n, --name=name                 Site Name
+ -r, --role=role                 AWS Role ARN
+ -u, --url=url                   Site URL
+ -v, --version                   show CLI version
+ --type=static|react|flask|node  The type of site to build
+ <!-- optionsstop -->
