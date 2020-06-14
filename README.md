@@ -25,6 +25,7 @@ USAGE
 <!-- usagestop -->
 # Options
 <!-- options -->
+```
 -d, --description=description   Site Description (for SEO)
  -h, --help                      show CLI help
  -n, --name=name                 Site Name
@@ -32,4 +33,5 @@ USAGE
  -u, --url=url                   Site URL
  -v, --version                   show CLI version
  --type=static|react|flask|node  The type of site to build
+ ```
  <!-- optionsstop -->
