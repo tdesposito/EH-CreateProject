@@ -3,6 +3,7 @@
 A tool to create a new project from a [template](https://github.com/tdesposito/Website-Template).
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
+![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/tdesposito/EH-CreateProject/master)
 <!-- [![Version](https://img.shields.io/npm/v/create-ehproject.svg)](https://npmjs.org/package/create-ehproject) -->
 <!-- [![Downloads/week](https://img.shields.io/npm/dw/create-ehproject.svg)](https://npmjs.org/package/create-ehproject) -->
 <!-- [![License](https://img.shields.io/npm/l/create-ehproject.svg)](https://github.com/tdesposito/EH-CreateProject/blob/master/package.json) -->
