@@ -40,17 +40,31 @@ DESCRIPTION
   https://github.com/tdesposito/Website-Template.
 
   If you don't include options on the command line, we'll prompt you for the
-  required values.```
+  required values.
+```
 <!-- usagestop -->
+
 # Options
 <!-- options -->
-```
--d, --description=description   Site Description (for SEO)
--h, --help                      show CLI help
--n, --name=name                 Site Name
--r, --role=role                 AWS Role ARN
--u, --url=url                   Site URL
--v, --version                   show CLI version
---type=static|react|flask|node  The type of site to build
-```
+We collect via command line switches or interactively these details:
+
+-d, --description=description
+> Site Description. We include this description in meta tags
+
+-n, --name=name
+> Site Name
+
+-r, --role=role
+> AWS Role ARN
+
+-u, --domain=domain
+> Site domain. We automatically make URLS for alpha and production sites.
+
+--type=
+> The type of site to build:
+> * static
+> * react
+> * flask
+> * node  
+
 <!-- optionsstop -->

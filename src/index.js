@@ -44,6 +44,7 @@ class CreateEHProject extends Command {
 
     await extractTemplate(dir, templateURL)
 
+    // TODO: generalize and parameterize this process:
     console.log('updating README.md...')
     let readme = fs.readFileSync(`${dir}/README.md`).toString('utf-8')
     readme = readme.replace("${ProjectName}", prjname)
