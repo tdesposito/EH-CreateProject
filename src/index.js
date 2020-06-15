@@ -1,13 +1,19 @@
-/* create-ehproject bootstraps a new website project based on a template.
+/**
+ * @file Bootstrap a new website project based on a template.
  *
+ * @author Todd D. Esposito <todd@espositoholdings.com>
+ * @copyright Copyright 2020 Todd D. Esposito.
+ * @license Released under the MIT license.
  */
 
 const fs = require('fs')
 const {Command, flags} = require('@oclif/command')
 const inq = require('inquirer')
+// const listr = require('listr')
 
 const {updateAWSConfig} = require('./updateAWSConfig')
 const {extractTemplate} = require('./extractTemplate')
+const {updateTemplate} = require('./updateTemplate')
 
 const t_usesS3 = ["static", "react"]
 const t_usesEB = ["flask", "node"]
@@ -26,71 +32,66 @@ class CreateEHProject extends Command {
       { name: 'role', message: "AWS Role ARN (empty for no external role)", type: 'input', default: flags.role, when: !(flags.role) },
     ])
 
-    const prjname = (answers.name || flags.name).split(' ').join('')
-    const dir = args.dir || prjname
-    const pkgname = (answers.name || flags.name).split(' ').join('-').toLowerCase()
-
-    const roleARN = answers.role || flags.role
-    var profile = prjname.toLowerCase()
-    if (roleARN) {
-      // Update our aws cli config with the new project profile
-      updateAWSConfig(profile, roleARN)
-    } else {
-      profile = 'default'
+    var params = {
+      packageName: (answers.name || flags.name).split(' ').join('-').toLowerCase(),
+      projectName: (answers.name || flags.name).split(' ').join(''),
+      projectType: (answers.type || flags.type),
+      roleARN: answers.role || flags.role,
+      siteDescription: (answers.description || flags.description),
+      siteDomain: (answers.domain || flags.domain),
+      siteName: (answers.name || flags.name),
     }
-    const repoURL = `codecommit::us-east-1://${profile}@${prjname}-Website`
+    params.profile = (params.roleARN ? params.projectName.toLowerCase() : "default")
+    params.projectDir = args.dir || params.projectName
+    params.projectHosting = (t_usesS3.includes(params.projectType) ? "s3hosted" : "elasticBeanstalk")
+    params.repoURL = `codecommit::us-east-1://${params.profile}@${params.projectName}-Website`
+    params.siteURL = `https://${params.siteDomain}`
 
-    // TOOD: build the CodeCommit repo for the project, check it out to ${dir}
-
-    await extractTemplate(dir, templateURL)
-
-    // TODO: generalize and parameterize this process:
-    // We also need to handle index.html
-    console.log('updating README.md...')
-    let readme = fs.readFileSync(`${dir}/README.md`).toString('utf-8')
-    readme = readme.replace("${ProjectName}", prjname)
-    fs.writeFileSync(`${dir}/README.md`, readme)
-
-    console.log('updating site/sitemap.xml...')
-    let sitemap = fs.readFileSync(`${dir}/site/sitemap.xml`).toString('utf-8')
-    sitemap = sitemap.replace("${SiteURL}", `https://${answers.domain || flags.domain}`)
-    fs.writeFileSync(`${dir}/site/sitemap.xml`, sitemap)
-
-
-    console.log("updating package.json...")
-    let pkg = JSON.parse(fs.readFileSync(`${dir}/package.json`).toString('utf-8'))
-    pkg.name = `${pkgname}-website`
-    pkg.description = answers.description || flags.description
-    pkg.repository = repoURL
-    pkg.ehTemplate.type = answers.type || flags.type
-    pkg.ehTemplate.roleARN = roleARN
-    if (t_usesS3.includes(pkg.ehTemplate.type)) {
-      pkg.ehTemplate.hosting = "s3hosted"
-    } else {
-      pkg.ehTemplate.hosting = "elasticBeanstalk"
-    }
-
-    let envs = pkg.ehTemplate.environments
-    if (t_usesS3.includes(answers.type || flags.type)) {
-      // if we're s3, we need alpha/production buckets
-      envs.alpha.bucket = `s3://alpha.${answers.domain || flags.domain}`
-      envs.production.bucket = `s3://${answers.domain || flags.domain}`
-      // TODO: make these buckets, configure for web hosting
-
-      // TODO: move this prompt to before all the processing.
-      const s3ans = await inq.prompt([
+    var cloudfront = {}
+    if (t_usesS3.includes(params.projectType)) {
+      // TODO: make a CloudFront distribution for the production bucket, rather than prompting
+      let cloudfront = await inq.prompt([
         { name: 'distid', message: "Distribution ID (or leave empty)", type: 'string' },
       ])
-      // TODO: make a CloudFront distribution for the production bucket
-      if (s3ans.distid) {
-        envs.production.distribution = s3ans.distid
+    }
+
+    if (params.roleARN) {
+      // Update our aws cli config with the new project profile
+      updateAWSConfig(params.profile, params.roleARN)
+    }
+
+    if (cloudfront.distid) {
+      // TOOD: build the CodeCommit repo for the project, check it out to ${dir}
+    }
+
+    await extractTemplate(params.projectDir, templateURL)
+
+    updateTemplate(params.projectDir, params)
+
+    console.log("updating package.json...")
+    let pkg = JSON.parse(fs.readFileSync(`${params.projectDir}/package.json`).toString('utf-8'))
+    pkg.name = `${params.packageName}-website`
+    pkg.description = params.siteDescription
+    pkg.repository = params.repoURL
+    pkg.ehTemplate.type = params.projectType
+    pkg.ehTemplate.roleARN = params.roleARN
+    pkg.ehTemplate.hosting = params.projectHosting
+
+    let envs = pkg.ehTemplate.environments
+    if (t_usesS3.includes(params.projectType)) {
+      // if we're s3, we need alpha/production buckets
+      envs.alpha.bucket = `s3://alpha.${params.siteDomain}`
+      envs.production.bucket = `s3://${params.siteDomain}`
+      // TODO: make these buckets, configure for web hosting
+      if (cloudfront.distid) {
+        envs.production.distribution = cloudfront.distid
       }
     } else {
       // TODO: get eb config we need for deploys
     }
 
     // Update package.json with our config
-    fs.writeFileSync(`${dir}/package.json`, JSON.stringify(pkg, null, 2))
+    fs.writeFileSync(`${params.projectDir}/package.json`, JSON.stringify(pkg, null, 2))
   }
 }
 

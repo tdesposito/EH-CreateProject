@@ -1,11 +1,23 @@
-/* this module handles extracting the template.
+/**
+ * @file Extract the "Website" subtree from the template repository.
  *
+ * Part of the create-ehproject tool.
+ *
+ * @author Todd D. Esposito <todd@espositoholdings.com>
+ * @copyright Copyright 2020 Todd D. Esposito.
+ * @license Released under the MIT license.
  */
 
 const fs = require('fs')
 const unzip = require('unzipper')
 const got = require('got')
 
+/**
+ * @function extractTemplate Download the "Website" subtree from the template repository
+ *
+ * @param {string} to - the target directory
+ * @param {string} template - the URL of the template repository.
+ */
 async function extractTemplate (to, template) {
   const url = `${template}/archive/master.zip`
   console.log(`fetching ${url}`)
