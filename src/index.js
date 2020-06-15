@@ -45,6 +45,7 @@ class CreateEHProject extends Command {
     await extractTemplate(dir, templateURL)
 
     // TODO: generalize and parameterize this process:
+    // We also need to handle index.html
     console.log('updating README.md...')
     let readme = fs.readFileSync(`${dir}/README.md`).toString('utf-8')
     readme = readme.replace("${ProjectName}", prjname)
@@ -76,6 +77,7 @@ class CreateEHProject extends Command {
       envs.production.bucket = `s3://${answers.domain || flags.domain}`
       // TODO: make these buckets, configure for web hosting
 
+      // TODO: move this prompt to before all the processing.
       const s3ans = await inq.prompt([
         { name: 'distid', message: "Distribution ID (or leave empty)", type: 'string' },
       ])

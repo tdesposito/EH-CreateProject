@@ -60,11 +60,11 @@ We collect via command line switches or interactively these details:
 -u, --domain=domain
 > Site domain. We automatically make URLS for alpha and production sites.
 
---type=
+--type=type
 > The type of site to build:
-> * static
-> * react
-> * flask
-> * node  
+> * static - a simple, hand-built site hosted with s3/CloudFront, maybe Lambda
+> * react - **planned but not yet implemented**
+> * flask - **planned but not yet implemented**
+> * node - **planned but not yet implemented**
 
 <!-- optionsstop -->
