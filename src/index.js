@@ -1,11 +1,13 @@
+/* create-ehproject bootstraps a new website project based on a template.
+ *
+ */
+
 const fs = require('fs')
 const {Command, flags} = require('@oclif/command')
 const inq = require('inquirer')
-const AWS = require('aws-sdk')
-const S3 = require('aws-sdk/clients/s3')
-const CodeCommit = require('aws-sdk/clients/codecommit')
 
 const {updateAWSConfig} = require('./updateAWSConfig')
+const {extractTemplate} = require('./extractTemplate')
 
 const t_usesS3 = ["static", "react"]
 const t_usesEB = ["flask", "node"]
@@ -13,42 +15,48 @@ const types = [...t_usesS3, ...t_usesEB]
 
 const templateURL = "https://github.com/tdesposito/Website-Template"
 
-class CreateEhprojectCommand extends Command {
+class CreateEHProject extends Command {
   async run() {
-    const {args, flags} = this.parse(CreateEhprojectCommand)
+    const {args, flags} = this.parse(CreateEHProject)
     const answers = await inq.prompt([
       { name: 'type', message: "Type", type: 'list', choices: types, default: flags.type, when: !(flags.type) },
       { name: 'name', message: "Name", type: 'input', default: flags.name, when: !(flags.name) },
       { name: 'description', message: "Description", type: 'input', default: flags.description, when: !(flags.description) },
-      { name: 'url', message: "Site URL", type: 'input', default: flags.url, when: !(flags.url) },
+      { name: 'domain', message: "Site Domain", type: 'input', default: flags.domain, when: !(flags.domain) },
       { name: 'role', message: "AWS Role ARN (empty for no external role)", type: 'input', default: flags.role, when: !(flags.role) },
     ])
 
     const prjname = (answers.name || flags.name).split(' ').join('')
     const dir = args.dir || prjname
     const pkgname = (answers.name || flags.name).split(' ').join('-').toLowerCase()
-    const profile = prjname.toLowerCase()
-    const repoURL = `codecommit::us-east-1://${profile}@${prjname}-Website`
 
     const roleARN = answers.role || flags.role
+    var profile = prjname.toLowerCase()
     if (roleARN) {
       // Update our aws cli config with the new project profile
       updateAWSConfig(profile, roleARN)
-      // Update our credentials based on the new profile
-      var credentials = new AWS.SharedIniFileCredentials({profile: profile})
-      AWS.config.credentials = credentials
+    } else {
+      profile = 'default'
     }
+    const repoURL = `codecommit::us-east-1://${profile}@${prjname}-Website`
 
     // TOOD: build the CodeCommit repo for the project, check it out to ${dir}
 
-    // TODO: download and expand the template into ${dir}
-    // await fetch(`${templateURL}/archive/master.zip`)
+    await extractTemplate(dir, templateURL)
 
-    // TODO: Update the ./README.md with the project name
+    console.log('updating README.md...')
+    let readme = fs.readFileSync(`${dir}/README.md`).toString('utf-8')
+    readme = readme.replace("${ProjectName}", prjname)
+    fs.writeFileSync(`${dir}/README.md`, readme)
+
+    console.log('updating site/sitemap.xml...')
+    let sitemap = fs.readFileSync(`${dir}/site/sitemap.xml`).toString('utf-8')
+    sitemap = sitemap.replace("${SiteURL}", `https://${answers.domain || flags.domain}`)
+    fs.writeFileSync(`${dir}/site/sitemap.xml`, sitemap)
 
 
-    var pkg = require(`${dir}/package.json`)
-
+    console.log("updating package.json...")
+    let pkg = JSON.parse(fs.readFileSync(`${dir}/package.json`).toString('utf-8'))
     pkg.name = `${pkgname}-website`
     pkg.description = answers.description || flags.description
     pkg.repository = repoURL
@@ -63,8 +71,8 @@ class CreateEhprojectCommand extends Command {
     let envs = pkg.ehTemplate.environments
     if (t_usesS3.includes(answers.type || flags.type)) {
       // if we're s3, we need alpha/production buckets
-      envs.alpha.bucket = `s3://alpha.${answers.url || flags.url}`
-      envs.production.bucket = `s3://${answers.url || flags.url}`
+      envs.alpha.bucket = `s3://alpha.${answers.domain || flags.domain}`
+      envs.production.bucket = `s3://${answers.domain || flags.domain}`
       // TODO: make these buckets, configure for web hosting
 
       const s3ans = await inq.prompt([
@@ -83,7 +91,7 @@ class CreateEhprojectCommand extends Command {
   }
 }
 
-CreateEhprojectCommand.description = `Creates a new project based on an EH Template
+CreateEHProject.description = `Creates a new project based on an EH Template
 This tool will create a new Website project based on the current template at
 ${templateURL}.
 
@@ -91,20 +99,20 @@ If you don't include options on the command line, we'll prompt you for the
 required values.
 `
 
-CreateEhprojectCommand.args = [
+CreateEHProject.args = [
   {name: "dir", required: false, description: "the directory in which to create the project; defaults to the site name"}
 ]
 
-CreateEhprojectCommand.flags = {
+CreateEHProject.flags = {
   // add --version flag to show CLI version
   version: flags.version({char: 'v'}),
   // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
   type: flags.string({options: types, description: 'The type of site to build'}),
   name: flags.string({char: 'n', description: 'Site Name'}),
-  description: flags.string({char: 'd', description: "Site Description (for SEO)"}),
-  url: flags.string({char: 'u', description: "Site URL"}),
+  description: flags.string({char: 'd', description: "Site Description"}),
+  domain: flags.string({char: 'u', description: "Site domain"}),
   role: flags.string({char: 'r', description: "AWS Role ARN"}),
 }
 
-module.exports = CreateEhprojectCommand
+module.exports = CreateEHProject
