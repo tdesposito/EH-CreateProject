@@ -11,9 +11,9 @@ const {Command, flags} = require('@oclif/command')
 const inq = require('inquirer')
 // const listr = require('listr')
 
-const {updateAWSConfig} = require('./updateAWSConfig')
-const {extractTemplate} = require('./extractTemplate')
-const {updateTemplate} = require('./updateTemplate')
+const {updateAWSConfig} = require('tasks/updateAWSConfig')
+const {extractTemplate} = require('tasks/extractTemplate')
+const {updateTemplate} = require('tasks/updateTemplate')
 
 const t_usesS3 = ["static", "react"]
 const t_usesEB = ["flask", "node"]
@@ -60,10 +60,6 @@ class CreateEHProject extends Command {
       updateAWSConfig(params.profile, params.roleARN)
     }
 
-    if (cloudfront.distid) {
-      // TOOD: build the CodeCommit repo for the project, check it out to ${dir}
-    }
-
     await extractTemplate(params.projectDir, templateURL)
 
     updateTemplate(params.projectDir, params)
@@ -81,8 +77,17 @@ class CreateEHProject extends Command {
     if (t_usesS3.includes(params.projectType)) {
       // if we're s3, we need alpha/production buckets
       envs.alpha.bucket = `s3://alpha.${params.siteDomain}`
+      // TODO: should we consider parameterizing region?
+      envs.alpha.siteurl = `http://alpha.${params.siteDomain}.s3-website-us-east-1.amazonaws.com`
       envs.production.bucket = `s3://${params.siteDomain}`
       // TODO: make these buckets, configure for web hosting
+      // -- aws s3api create-bucket --bucket my-bucket --region us-east-1
+      // -- aws s3 website s3://my-bucket/ --index-document index.html --error-document error.html
+
+      // TODO: create the distribution for the production domain
+      // -- aws cloudfront create-distribution --distribution-config file://distconfig.json
+      // -- see: https://stackoverflow.com/questions/26094615/aws-cli-create-cloudfront-distribution-distribution-config
+      }
       if (cloudfront.distid) {
         envs.production.distribution = cloudfront.distid
       }
@@ -92,6 +97,16 @@ class CreateEHProject extends Command {
 
     // Update package.json with our config
     fs.writeFileSync(`${params.projectDir}/package.json`, JSON.stringify(pkg, null, 2))
+
+    // TOOD: build the CodeCommit repo for the project
+    // -- aws codecommit create-repository --repository-name ${params.projectName}-Website --repository-description "Your source code for your website resides here."
+    // -- git checkout params.repoURL projectDir
+    // -- git add --all
+    // -- git commit -m 'Initial commit'
+    // -- git push
+
+    // TODO: init the project
+    // -- npm install
   }
 }
 
@@ -108,9 +123,7 @@ CreateEHProject.args = [
 ]
 
 CreateEHProject.flags = {
-  // add --version flag to show CLI version
   version: flags.version({char: 'v'}),
-  // add --help flag to show CLI version
   help: flags.help({char: 'h'}),
   type: flags.string({options: types, description: 'The type of site to build'}),
   name: flags.string({char: 'n', description: 'Site Name'}),
