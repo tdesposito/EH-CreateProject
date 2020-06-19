@@ -24,7 +24,6 @@ function updateTemplateFile(name, regexs) {
     return s.replace(re[0], re[1])
   }, original)
   if (revised !== original) {
-    console.log(`updating ${name}`)
     fs.writeFileSync(name, revised)
   }
 }
@@ -41,7 +40,7 @@ function updateTemplateFile(name, regexs) {
      const target = path.join(dir, ent.name)
      if (ent.isDirectory()) {
        walkTemplate(target, regexs)
-     } else if (ent.name !== 'package.json') {
+     } else {
        updateTemplateFile(target, regexs)
      }
    })
@@ -60,5 +59,6 @@ function updateTemplate(dir, params) {
       regexs.push([new RegExp(`\{\{${key}\}\}`, 'g'), value])
     }
     walkTemplate(dir, regexs)
+    return('Template updated.')
   }
 exports.updateTemplate = updateTemplate

@@ -20,9 +20,7 @@ const got = require('got')
  */
 async function extractTemplate (to, template) {
   const url = `${template}/archive/master.zip`
-  console.log(`fetching ${url}`)
   const response = await got(url)
-  console.log('extracting...')
   const directory = await unzip.Open.buffer(response.rawBody)
   for (e of directory.files) {
     if (e.path.includes('/Website/')) {
@@ -32,12 +30,11 @@ async function extractTemplate (to, template) {
           fs.mkdirSync(`${to}/${tgt}`)
         }
       } else {
-        console.log(`writing ${tgt}`)
         await extractFile(`${to}/${tgt}`, e)
       }
     }
   }
-  console.log("done extracting.")
+  return("Template extracted.")
 }
 
 async function extractFile(tgt, e) {
@@ -45,7 +42,7 @@ async function extractFile(tgt, e) {
     e.stream()
     .pipe(fs.createWriteStream(tgt))
     .on('error', reject)
-    .on('finish',resolve)
+    .on('finish', resolve)
   })
 }
 

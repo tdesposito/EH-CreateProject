@@ -27,6 +27,7 @@ function updateAWSConfig(name, arn) {
     region: 'us-east-1'
   }
   fs.writeFileSync(`${homedir}/.aws/config`, ini.stringify(awscfg))
+  return ('AWS Updated.')
 }
 
 exports.updateAWSConfig = updateAWSConfig

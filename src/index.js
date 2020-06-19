@@ -6,18 +6,14 @@
  * @license Released under the MIT license.
  */
 
-const fs = require('fs')
-const {Command, flags} = require('@oclif/command')
 const inq = require('inquirer')
-// const listr = require('listr')
+const {Command, flags} = require('@oclif/command')
 
-const {updateAWSConfig} = require('tasks/updateAWSConfig')
-const {extractTemplate} = require('tasks/extractTemplate')
-const {updateTemplate} = require('tasks/updateTemplate')
+const {buildTasklist} = require('./buildTasklist')
 
-const t_usesS3 = ["static", "react"]
+const t_usesS3 = ["static", "react", "eleventy"]
 const t_usesEB = ["flask", "node"]
-const types = [...t_usesS3, ...t_usesEB]
+const types = [...t_usesS3, ...t_usesEB].sort()
 
 const templateURL = "https://github.com/tdesposito/Website-Template"
 
@@ -33,6 +29,7 @@ class CreateEHProject extends Command {
     ])
 
     var params = {
+      templateURL: templateURL,
       packageName: (answers.name || flags.name).split(' ').join('-').toLowerCase(),
       projectName: (answers.name || flags.name).split(' ').join(''),
       projectType: (answers.type || flags.type),
@@ -40,6 +37,8 @@ class CreateEHProject extends Command {
       siteDescription: (answers.description || flags.description),
       siteDomain: (answers.domain || flags.domain),
       siteName: (answers.name || flags.name),
+      alphaConfig: {},
+      prodConfig: {},
     }
     params.profile = (params.roleARN ? params.projectName.toLowerCase() : "default")
     params.projectDir = args.dir || params.projectName
@@ -47,66 +46,12 @@ class CreateEHProject extends Command {
     params.repoURL = `codecommit::us-east-1://${params.profile}@${params.projectName}-Website`
     params.siteURL = `https://${params.siteDomain}`
 
-    var cloudfront = {}
-    if (t_usesS3.includes(params.projectType)) {
-      // TODO: make a CloudFront distribution for the production bucket, rather than prompting
-      let cloudfront = await inq.prompt([
-        { name: 'distid', message: "Distribution ID (or leave empty)", type: 'string' },
-      ])
-    }
-
-    if (params.roleARN) {
-      // Update our aws cli config with the new project profile
-      updateAWSConfig(params.profile, params.roleARN)
-    }
-
-    await extractTemplate(params.projectDir, templateURL)
-
-    updateTemplate(params.projectDir, params)
-
-    console.log("updating package.json...")
-    let pkg = JSON.parse(fs.readFileSync(`${params.projectDir}/package.json`).toString('utf-8'))
-    pkg.name = `${params.packageName}-website`
-    pkg.description = params.siteDescription
-    pkg.repository = params.repoURL
-    pkg.ehTemplate.type = params.projectType
-    pkg.ehTemplate.roleARN = params.roleARN
-    pkg.ehTemplate.hosting = params.projectHosting
-
-    let envs = pkg.ehTemplate.environments
-    if (t_usesS3.includes(params.projectType)) {
-      // if we're s3, we need alpha/production buckets
-      envs.alpha.bucket = `s3://alpha.${params.siteDomain}`
-      // TODO: should we consider parameterizing region?
-      envs.alpha.siteurl = `http://alpha.${params.siteDomain}.s3-website-us-east-1.amazonaws.com`
-      envs.production.bucket = `s3://${params.siteDomain}`
-      // TODO: make these buckets, configure for web hosting
-      // -- aws s3api create-bucket --bucket my-bucket --region us-east-1
-      // -- aws s3 website s3://my-bucket/ --index-document index.html --error-document error.html
-
-      // TODO: create the distribution for the production domain
-      // -- aws cloudfront create-distribution --distribution-config file://distconfig.json
-      // -- see: https://stackoverflow.com/questions/26094615/aws-cli-create-cloudfront-distribution-distribution-config
-      }
-      if (cloudfront.distid) {
-        envs.production.distribution = cloudfront.distid
-      }
-    } else {
-      // TODO: get eb config we need for deploys
-    }
-
-    // Update package.json with our config
-    fs.writeFileSync(`${params.projectDir}/package.json`, JSON.stringify(pkg, null, 2))
-
-    // TOOD: build the CodeCommit repo for the project
-    // -- aws codecommit create-repository --repository-name ${params.projectName}-Website --repository-description "Your source code for your website resides here."
-    // -- git checkout params.repoURL projectDir
-    // -- git add --all
-    // -- git commit -m 'Initial commit'
-    // -- git push
-
-    // TODO: init the project
-    // -- npm install
+    console.log('\n')
+    const tasks = buildTasklist(params)
+    await tasks.run().catch(err => {
+      console.error(err)
+    })
+    console.log('\n')
   }
 }
 
@@ -123,13 +68,15 @@ CreateEHProject.args = [
 ]
 
 CreateEHProject.flags = {
-  version: flags.version({char: 'v'}),
-  help: flags.help({char: 'h'}),
+  // our flags for project config
   type: flags.string({options: types, description: 'The type of site to build'}),
   name: flags.string({char: 'n', description: 'Site Name'}),
   description: flags.string({char: 'd', description: "Site Description"}),
   domain: flags.string({char: 'u', description: "Site domain"}),
   role: flags.string({char: 'r', description: "AWS Role ARN"}),
+  // oclif flag (--help, --version)
+  version: flags.version({char: 'v'}),
+  help: flags.help({char: 'h'}),
 }
 
 module.exports = CreateEHProject

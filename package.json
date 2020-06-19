@@ -1,12 +1,12 @@
 {
   "name": "create-ehproject",
   "description": "Create a project from an EH template",
-  "version": "0.1.0",
-  "author": "Todd Esposito @tdesposito",
+  "version": "1.0.0",
+  "author": "Todd Esposito <todd@@espositohosting.com>",
   "bin": {
     "create-ehproject": "./bin/run"
   },
-  "bugs": "https://github.com/tdesposito/create-ehproject/issues",
+  "bugs": "https://github.com/tdesposito/EH-CreateProject/issues",
   "dependencies": {
     "@oclif/command": "^1.6.1",
     "@oclif/config": "^1.15.1",
@@ -23,9 +23,11 @@
     "chai": "^4.2.0",
     "eslint": "^5.16.0",
     "eslint-config-oclif": "^3.1.0",
+    "execa": "^4.0.2",
     "mocha": "^5.2.0",
     "nyc": "^14.1.1",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "rxjs": "^6.5.5"
   },
   "engines": {
     "node": ">=8.0.0"
@@ -34,7 +36,7 @@
     "/bin",
     "/src"
   ],
-  "homepage": "https://github.com/tdesposito/create-ehproject",
+  "homepage": "https://github.com/tdesposito/EH-CreateProject",
   "keywords": [
     "oclif"
   ],
@@ -43,7 +45,10 @@
   "oclif": {
     "bin": "create-ehproject"
   },
-  "repository": "tdesposito/create-ehproject",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tdesposito/EH-CreateProject.git"
+  },
   "scripts": {
     "posttest": "eslint .",
     "prepack": "oclif-dev readme",
