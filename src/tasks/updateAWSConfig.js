@@ -27,6 +27,16 @@ function updateAWSConfig(name, arn) {
     region: 'us-east-1'
   }
   fs.writeFileSync(`${homedir}/.aws/config`, ini.stringify(awscfg))
+  // serverless requires the profile to be in .aws/credentials
+  var awscfg = ini.parse(fs.readFileSync(`${homedir}/.aws/credentials`, {encoding: 'utf8', flag:'r'}))
+  awscfg[name] = {
+    source_profile: 'default',
+    role_session_name: 'CodeCommitAccess',
+    role_arn: arn,
+    region: 'us-east-1'
+  }
+  fs.writeFileSync(`${homedir}/.aws/credentials`, ini.stringify(awscfg))
+
   return ('AWS Updated.')
 }
 
