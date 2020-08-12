@@ -46,10 +46,10 @@ function setTemplateVars(params) {
  * @param {Object} params - Project parameters.
  * @returns {Object} - a Listr object with the appropriate sub-tasks.
  */
-function initDevEnv(params) {
+exports.initDevEnv =  params => {
   var tasklist = [
     {
-      title: 'Install Tooling (will take some time)',
+      title: 'Install Tooling (this may take some time)',
       task: () => runNPM('install', params)
     },
   ]
@@ -73,6 +73,4 @@ function initDevEnv(params) {
   )
   return new listr(tasklist)
 }
-
-
-exports.initDevEnv = initDevEnv
+// exports.initDevEnv = initDevEnv

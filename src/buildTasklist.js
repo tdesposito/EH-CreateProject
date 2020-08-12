@@ -8,9 +8,8 @@
  * @license Released under the MIT license.
  */
 
+const execa = require('execa')
 const listr = require('listr')
-// const execa = require('execa')
-// const {Observable} = require('rxjs')
 
 const {updateAWSConfig} = require('./tasks/updateAWSConfig')
 const {extractTemplate} = require('./tasks/extractTemplate')
@@ -29,6 +28,16 @@ function buildTasklist(params) {
       title: 'Update local AWS CLI configuration',
       skip: () => !(params.roleARN),
       task: () => updateAWSConfig(params.profile, params.roleARN)
+    },
+    {
+      title: 'Create Remote Repository',
+      task: () => execa('aws', ['codecommit', 'create-repository',
+                          '--repository-name',  `${params.projectName}-Website`,
+                          '--repository-description', 'Source code for your website resides here.']),
+    },
+    {
+      title: 'Clone Remote Repository',
+      task: () => execa('git', ['clone', params.repoURL, params.projectDir])
     },
     { // construct template
       title: 'Construct template',
@@ -52,33 +61,9 @@ function buildTasklist(params) {
     },
     { // init dev env
       title: 'Initializing Development Environment',
+      // skip: () => true, // FIXME: just for testing!
       task: () => initDevEnv(params)
     },
   ])
 }
-    // {
-    //   title: 'Creating Code Repository',
-    //   skip: true,
-    //   task: () => {
-    //     return new Observable(observer => {
-    //       observer.next('Create CodeCommit Repository')
-    //       // -- aws codecommit create-repository --repository-name ${params.projectName}-Website --repository-description "Your source code for your website resides here."
-    //       () => execa('aws', ['codecommit', 'create-repository',
-    //                     `--repository-name ${params.projectName}-Website`,
-    //                     '--repository-description', '"Your source code for your website resides here."'
-    //                   ]).then(result => {
-    //                     if (result !== '0') {
-    //                       throw new Error('Could not create repository')
-    //                     }
-    //                     observer.next('Check Out Respoitory')
-    //                   })
-    //       // -- git checkout params.repoURL projectDir
-    //       // -- git add --all
-    //       // -- git commit -m 'Initial commit'
-    //       // -- git push
-    //     })
-    //   }
-    // },
-  // ])
-// }
 exports.buildTasklist = buildTasklist
