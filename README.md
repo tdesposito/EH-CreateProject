@@ -8,39 +8,23 @@ A tool to create a new project from a [template](https://github.com/tdesposito/W
 <!-- [![License](https://img.shields.io/npm/l/create-ehproject.svg)](https://github.com/tdesposito/EH-CreateProject/blob/master/package.json) -->
 
 <!-- toc -->
+* [EH-CreateProject](#eh-createproject)
 * [Usage](#usage)
 * [Options](#options)
+* [To Do Items](#to-do-items)
 <!-- tocstop -->
 # Usage
 <!-- usage -->
 ```sh-session
 $ npm install -g create-ehproject
-$ create-ehproject [DIR] [OPTIONS]
-...
-$ create-ehproject --help
-Creates a new project based on an EH Template
-
+$ create-ehproject COMMAND
+running command...
+$ create-ehproject (-v|--version|version)
+create-ehproject/1.0.1 win32-x64 node-v12.13.1
+$ create-ehproject --help [COMMAND]
 USAGE
-  $ create-ehproject [DIR]
-
-ARGUMENTS
-  DIR  the directory in which to create the project; defaults to the site name
-
-OPTIONS
-  -d, --description=description   Site Description
-  -h, --help                      show CLI help
-  -n, --name=name                 Site Name
-  -r, --role=role                 AWS Role ARN
-  -u, --domain=domain             Site domain
-  -v, --version                   show CLI version
-  --type=...                      The type of site to build
-
-DESCRIPTION
-  This tool will create a new Website project based on the current template at
-  https://github.com/tdesposito/Website-Template.
-
-  If you don't include options on the command line, we'll prompt you for the
-  required values.
+  $ create-ehproject COMMAND
+...
 ```
 <!-- usagestop -->
 
