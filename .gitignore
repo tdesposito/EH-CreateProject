@@ -1,5 +1,6 @@
 *-debug.log
 *-error.log
+.tags
 /.nyc_output
 /dist
 /tmp
