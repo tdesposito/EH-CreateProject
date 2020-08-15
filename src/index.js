@@ -11,16 +11,16 @@ const {Command, flags} = require('@oclif/command')
 
 const {buildTasklist} = require('./buildTasklist')
 
-const t_usesS3 = ["static", "react", "eleventy"]
-const t_usesEB = ["flask", "node"]
-const types = [...t_usesS3, ...t_usesEB].sort()
+const types_usesS3 = ['static', 'react', 'eleventy'].sort()
+const types_usesEB = ['flask', 'node'].sort()
+const types = [...types_usesS3, ...types_usesEB, 'hybrid'].sort()
 
-const templateURL = "https://github.com/tdesposito/Website-Template"
+const templateURL = 'https://github.com/tdesposito/Website-Template'
 
 class CreateEHProject extends Command {
   async run() {
     const {args, flags} = this.parse(CreateEHProject)
-    const answers = await inq.prompt([
+    var answers = await inq.prompt([
       { name: 'type', message: "Type", type: 'list', choices: types, default: flags.type, when: !(flags.type) },
       { name: 'name', message: "Name", type: 'input', default: flags.name, when: !(flags.name) },
       { name: 'description', message: "Description", type: 'input', default: flags.description, when: !(flags.description) },
@@ -29,6 +29,9 @@ class CreateEHProject extends Command {
     ])
 
     var params = {
+      initRepo: ! flags.noinitrepo,
+      initDev: ! flags.noinitdev,
+      initHosting: ! flags.noinithosting,
       templateURL: templateURL,
       packageName: (answers.name || flags.name).split(' ').join('-').toLowerCase(),
       projectName: (answers.name || flags.name).split(' ').join(''),
@@ -42,9 +45,21 @@ class CreateEHProject extends Command {
     }
     params.profile = (params.roleARN ? params.projectName.toLowerCase() : "default")
     params.projectDir = args.dir || params.projectName
-    params.projectHosting = (t_usesS3.includes(params.projectType) ? "s3hosted" : "elasticBeanstalk")
+    params.projectHosting = (types_usesS3.includes(params.projectType) ? "s3hosted" : "elasticbeanstalk")
     params.repoURL = `codecommit::us-east-1://${params.profile}@${params.projectName}-Website`
     params.siteURL = `https://${params.siteDomain}`
+    if (params.projectType === "hybrid") {
+      answers = await inq.prompt([
+        { name: 'frontend', message: "Front End App Type", type: 'list', choices: types_usesS3},
+        { name: 'backend', message: "Back End App Type", type: 'list', choices: types_usesEB},
+      ])
+      params = {...params, ...answers}
+      params.frontendSource = 'frontend'
+      params.frontendBuildTarget = '/build/static/frontend'
+    } else {
+      params.frontendSource = 'site'
+      params.frontendBuildTarget = '/build'
+    }
 
     console.log('\n')
     const tasks = buildTasklist(params)
@@ -74,6 +89,9 @@ CreateEHProject.flags = {
   description: flags.string({char: 'd', description: "Site Description"}),
   domain: flags.string({char: 'u', description: "Site domain"}),
   role: flags.string({char: 'r', description: "AWS Role ARN"}),
+  noinitdev: flags.boolean({default: false, description: 'Skip initilization of the dev environment'}),
+  noinitrepo: flags.boolean({default: false, description: 'Skip creation of the repository'}),
+  noinithosting: flags.boolean({default: false, description: 'Skip creation of the hosting resources'}),
   // oclif flag (--help, --version)
   version: flags.version({char: 'v'}),
   help: flags.help({char: 'h'}),

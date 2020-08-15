@@ -13,31 +13,50 @@ const unzip = require('unzipper')
 const got = require('got')
 
 /**
- * @function extractTemplate Download the "Website" subtree from the template repository
+ * @function extractTemplate Extract the template into the local project
  *
- * @param {string} to - the target directory
  * @param {string} template - the URL of the template repository.
+ * @param {string} to - the target directory
  */
-async function extractTemplate (to, template) {
-  const url = `${template}/archive/master.zip`
+async function extractTemplate (params) {
+  var to = params.projectDir
+  var frontend = params.frontend || params.projectType
+  var backend = params.backend || 'NONE'
+  var fe_dir = params.frontend ? 'frontend' : 'site'
+
+  const url = `${params.templateURL}/archive/master.zip`
   const response = await got(url)
   const directory = await unzip.Open.buffer(response.rawBody)
+
   for (e of directory.files) {
-    if (e.path.includes('/Website/')) {
-      tgt = e.path.split('/').slice(2).join('/')
-      if (e.type == 'Directory') {
-        if (!fs.existsSync(`${to}/${tgt}`)) {
-          fs.mkdirSync(`${to}/${tgt}`)
-        }
-      } else {
-        await extractFile(`${to}/${tgt}`, e)
+    var parts = e.path.split('/')
+    var section = parts[1]
+    if (section === 'All' || section === `Hosting-${params.projectHosting}`) {
+      await extractFile(e, `${to}/${parts.slice(2).join('/')}`)
+    } else if (section === `Type-${frontend}`) {
+      if (parts[2] === 'site') {
+        parts[2] = fe_dir
       }
+      await extractFile(e, `${to}/${parts.slice(2).join('/')}`)
+    } else if (section === `Type-${backend}`) {
+      if (parts[2] === 'site') {
+        parts[2] = 'backend'
+      }
+      await extractFile(e, `${to}/${parts.slice(2).join('/')}`)
     }
   }
   return("Template extracted.")
 }
+exports.extractTemplate = extractTemplate
 
-async function extractFile(tgt, e) {
+
+async function extractFile(e, tgt) {
+  if (e.type === 'Directory') {
+    if (!fs.existsSync(tgt)) {
+      fs.mkdirSync(tgt)
+    }
+    return () => new Promise.resolve()
+  }
   return new Promise( (resolve, reject) => {
     e.stream()
     .pipe(fs.createWriteStream(tgt))
@@ -45,5 +64,3 @@ async function extractFile(tgt, e) {
     .on('finish', resolve)
   })
 }
-
-exports.extractTemplate = extractTemplate

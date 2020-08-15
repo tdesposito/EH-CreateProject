@@ -22,48 +22,49 @@ const {initDevEnv} = require('./tasks/initDevEnv')
  *
  * @param {Object} params - Project parameters.
  */
-function buildTasklist(params) {
+ exports.buildTasklist = params => {
   return new listr([
-    { // update aws cfg
+    {
       title: 'Update local AWS CLI configuration',
       skip: () => !(params.roleARN),
       task: () => updateAWSConfig(params.profile, params.roleARN)
     },
     {
-      title: 'Create Remote Repository',
+      title: 'Create remote repository',
+      skip: () => !(params.initRepo),
       task: () => execa('aws', ['codecommit', 'create-repository',
                           '--repository-name',  `${params.projectName}-Website`,
                           '--repository-description', 'Source code for your website resides here.']),
     },
     {
-      title: 'Clone Remote Repository',
+      title: 'Clone remote repository',
+      skip: () => !(params.initRepo),
       task: () => execa('git', ['clone', params.repoURL, params.projectDir])
     },
-    { // construct template
-      title: 'Construct template',
+    {
+      title: 'Construct local project directory',
       task: () => {
         return new listr([
           {
-            title: 'Download the template',
-            task: () => extractTemplate(params.projectDir, params.templateURL)
+            title: 'Download and extract the template',
+            task: () => extractTemplate(params)
           },
           {
-            title: 'Configure the tempate',
+            title: 'Configure the project',
             task: () => updateTemplate(params.projectDir, params)
           },
         ])
       }
     },
-    { // init hosting env
-      title: 'Initialize Hosting Environment',
-      // skip: () => true, // FIXME: just for testing!
+    {
+      title: 'Initialize hosting environment',
+      skip: () => !(params.initHosting),
       task: () => initHostingEnv(params)
     },
-    { // init dev env
-      title: 'Initializing Development Environment',
-      // skip: () => true, // FIXME: just for testing!
+    {
+      title: 'Initializing development environment',
+      skip: () => !(params.initDev),
       task: () => initDevEnv(params)
     },
   ])
 }
-exports.buildTasklist = buildTasklist
