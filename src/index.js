@@ -63,7 +63,7 @@ class CreateEHProject extends Command {
 
     console.log('\n')
     const tasks = buildTasklist(params)
-    await tasks.run().catch(err => {
+    await tasks.run({collapse: false}).catch(err => {
       console.error(err)
     })
     console.log('\n')
