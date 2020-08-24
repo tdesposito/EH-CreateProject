@@ -33,6 +33,7 @@ const {initDevEnv} = require('./tasks/initDevEnv')
       title: 'Create remote repository',
       skip: () => !(params.initRepo),
       task: () => execa('aws', ['codecommit', 'create-repository',
+                          '--profile', params.profile,
                           '--repository-name',  `${params.projectName}-Website`,
                           '--repository-description', 'Source code for your website resides here.']),
     },
