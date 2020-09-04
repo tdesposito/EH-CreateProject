@@ -65,19 +65,19 @@ function addDevEnvTask(tasklist, projectType, projectDir, taskDir) {
       tasklist.push(
         {
           title: 'Install React',
-          task: () => runNPM('install --save react react-dom', projectDir)
+          task: () => runNPM('install --save react react-dom react-hot-loader @hot-loader/react-dom', projectDir)
         }
       )
       tasklist.push(
         {
           title: 'Install Webpack',
-          task: () => runNPM('install --save-dev webpack webpack-dev-server webpack-cli html-webpack-plugin css-loader style-loader', projectDir)
+          task: () => runNPM('install --save-dev webpack webpack-dev-middleware webpack-hot-middleware html-webpack-plugin style-loader css-loader', projectDir)
         }
       )
       tasklist.push(
         {
           title: 'Install Babel',
-          task: () => runNPM('install --save-dev core-js@3 @babel/core @babel/preset-env @babel/preset-react babel-loader', projectDir)
+          task: () => runNPM('install --save-dev @babel/core @babel/preset-env @babel/preset-react babel-loader', projectDir)
         }
       )
       break
@@ -91,7 +91,7 @@ function addDevEnvTask(tasklist, projectType, projectDir, taskDir) {
  * @param {Object} params - Project parameters.
  * @returns {Object} - a Listr object with the appropriate sub-tasks.
  */
-exports.initDevEnv =  params => {
+exports.initDevEnv = params => {
   var tasklist = [
     {
       title: 'Install Gulp',
@@ -113,4 +113,3 @@ exports.initDevEnv =  params => {
   )
   return new listr(tasklist)
 }
-// exports.initDevEnv = initDevEnv
