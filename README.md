@@ -12,7 +12,7 @@ $ npm install -g create-ehproject
 $ create-ehproject COMMAND
 running command...
 $ create-ehproject (-v|--version|version)
-create-ehproject/1.0.1 win32-x64 node-v12.13.1
+create-ehproject/1.1.0 win32-x64 node-v12.13.1
 $ create-ehproject --help [COMMAND]
 USAGE
   $ create-ehproject COMMAND
@@ -55,6 +55,4 @@ In addition, you can turn off some aspects of the process:
 > Don't create and connect to the CodeCommit repo.
 
 # To Do Items
-<!-- todo -->
 Please see the [Roadmap](ROADMAP.md)
-<!-- todostop -->

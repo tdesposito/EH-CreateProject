@@ -54,5 +54,18 @@
     "prepack": "oclif-dev readme",
     "test": "nyc mocha --forbid-only \"test/**/*.test.js\"",
     "version": "oclif-dev readme && git add README.md"
+  },
+  "ehVersion": {
+    "targets": [
+      {
+        "file": "package-lock.json",
+        "key": "version"
+      },
+      {
+        "comment": "target a string in file. This comment is instructive, not functional",
+        "file": "README.md",
+        "search": "create-ehproject/{{version}} win32-x64 node-v12.13.1"
+      }
+    ]
   }
 }
