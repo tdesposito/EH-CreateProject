@@ -55,4 +55,4 @@ In addition, you can turn off some aspects of the process:
 > Don't create and connect to the CodeCommit repo.
 
 # To Do Items
-Please see the [Roadmap](ROADMAP.md)
+Please see the [Roadmap](ROADMAP.md) and [Change Log](CHANGELOG.md).
